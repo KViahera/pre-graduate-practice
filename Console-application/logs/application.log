@@ -1,0 +1,31 @@
+[2026-03-02 14:09:16 ERROR Main] The database configuration file could not be read.
+java.lang.IllegalArgumentException: Malformed \uxxxx encoding.
+	at java.base/java.util.Properties.loadConvert(Properties.java:664)
+	at java.base/java.util.Properties.load0(Properties.java:458)
+	at java.base/java.util.Properties.load(Properties.java:410)
+	at Main.main(Main.java:22)
+[2026-03-02 14:09:29 INFO  Main] Successfully loaded database configuration.
+[2026-03-02 14:09:29 INFO  Main] Database connection opened.
+[2026-03-02 14:09:36 INFO  service.ProblemService] Searching for a problem in the archive by ID: 100
+[2026-03-02 14:09:36 ERROR ui.ConsoleUI] Failed to delete problem.
+exception.DataAccessException: Failed to retrieve data for the problem with ID 100 from the archive.
+	at dao.ProblemDaoImplementation.retrieveById(ProblemDaoImplementation.java:68)
+	at service.ProblemService.retrieveById(ProblemService.java:34)
+	at service.ProblemService.delete(ProblemService.java:54)
+	at ui.ConsoleUI.delete(ConsoleUI.java:149)
+	at ui.ConsoleUI.start(ConsoleUI.java:32)
+	at Main.main(Main.java:39)
+Caused by: org.postgresql.util.PSQLException: ERROR: permission denied for table problems
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2725)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2412)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:371)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:502)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:419)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at dao.ProblemDaoImplementation.retrieveById(ProblemDaoImplementation.java:61)
+	... 5 common frames omitted
+[2026-03-02 14:10:21 INFO  Main] Successfully loaded database configuration.
+[2026-03-02 14:10:21 INFO  Main] Database connection opened.
+[2026-03-02 14:10:24 INFO  service.ProblemService] Searching for a problem in the archive by ID: 100
+[2026-03-02 14:10:24 WARN  service.ProblemService] Attempted to access a non-existent problem with ID: 100
