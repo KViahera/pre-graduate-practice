@@ -1,0 +1,10 @@
+package org.example.platform.repository;
+
+import org.example.platform.model.Problem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface ProblemRepository extends JpaRepository<Problem, Long> {
+    // Найти все задачи, которые разрешено показывать всем
+    List<Problem> findAllByIsPublicTrue();
+}
