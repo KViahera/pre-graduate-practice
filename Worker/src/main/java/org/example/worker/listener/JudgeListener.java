@@ -2,9 +2,12 @@ package org.example.worker.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.worker.config.RabbitMQConfiguration;
+import org.example.worker.dto.JudgeResult;
 import org.example.worker.dto.JudgeTask;
 import org.example.worker.service.JavaExecutorService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -13,21 +16,35 @@ import org.springframework.stereotype.Component;
 public class JudgeListener {
 
     private final JavaExecutorService javaExecutor;
+    private final RabbitTemplate rabbitTemplate; // Внедряем инструмент отправки
 
     @RabbitListener(queues = "judge_queue")
     public void processTask(JudgeTask task) {
-        log.info("Воркер получил задачу ID: {}. Язык: {}", task.submissionId(), task.language());
+        log.info("Проверяем посылку ID: {}", task.submissionId());
+
+        JudgeResult resultDto;
 
         if ("JAVA".equalsIgnoreCase(task.language())) {
-            var result = javaExecutor.execute(task.sourceCode(), task.timeLimitMillis());
+            var result = javaExecutor.execute(task.sourceCode(), task.timeLimitMillis(), task.testCases());
 
-            log.info("Статус: {}", result.status());
-            log.info("Время выполнения: {} ms", result.executionTimeMs());
-            log.info("Вывод программы/Ошибки:\n{}", result.outputOrError());
-
-            // TODO: Отправить результат обратно в главный бэкенд (REST-запросом или через другую очередь)
+            // Формируем DTO с результатом
+            resultDto = new JudgeResult(
+                    task.submissionId(),
+                    result.status(),
+                    result.details(),
+                    result.executionTimeMs(),
+                    result.testsPassed()
+            );
         } else {
-            log.warn("Язык {} пока не поддерживается воркером!", task.language());
+            resultDto = new JudgeResult(task.submissionId(), "SYSTEM_ERROR", "Неподдерживаемый язык", 0L, 0);
         }
+
+        // ОТПРАВЛЯЕМ РЕЗУЛЬТАТ ОБРАТНО В БЭКЕНД
+        rabbitTemplate.convertAndSend(
+                RabbitMQConfiguration.EXCHANGE_NAME,
+                RabbitMQConfiguration.RESULT_ROUTING_KEY,
+                resultDto
+        );
+        log.info("Результат посылки {} отправлен обратно!", task.submissionId());
     }
 }

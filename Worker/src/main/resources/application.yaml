@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: Worker
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+
+server:
+  port: 8081 # Основной бэкенд висит на 8080

@@ -1,4 +1,8 @@
 package org.example.worker.dto;
 
-public class TestCaseDto {
-}
+// DTO для передачи тестов
+public record TestCaseDto(
+        String inputData,
+        String expectedOutput,
+        Boolean isSample
+) {}
