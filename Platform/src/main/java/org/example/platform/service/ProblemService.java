@@ -34,11 +34,9 @@ public class ProblemService {
         problem.setTimeLimitMillis(request.timeLimitMillis());
         problem.setMemoryLimitMb(request.memoryLimitMb());
 
-        // Получаем текущего авторизованного пользователя из JWT токена
         User currentAuthor = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         problem.setAuthor(currentAuthor);
 
-        // Обрабатываем теги
         if (request.tags() != null) {
             for (String tagName : request.tags()) {
                 String cleanName = tagName.toLowerCase().trim();
@@ -52,14 +50,13 @@ public class ProblemService {
             }
         }
 
-        // Обрабатываем тесты
         if (request.testCases() != null) {
             for (var tcDto : request.testCases()) {
                 TestCase tc = new TestCase();
                 tc.setInputData(tcDto.inputData());
                 tc.setExpectedOutput(tcDto.expectedOutput());
                 tc.setIsSample(tcDto.isSample());
-                tc.setProblem(problem); // Обязательно связываем тест с задачей!
+                tc.setProblem(problem);
                 problem.getTestCases().add(tc);
             }
         }

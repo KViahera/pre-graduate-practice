@@ -53,7 +53,6 @@ public class Problem {
     @JoinTable(name = "problem_tags", joinColumns = @JoinColumn(name = "problem_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new HashSet<>();
 
-    // CascadeType.ALL означает, что при сохранении/удалении задачи, тесты сохранятся/удалятся автоматически
     @OneToMany(mappedBy = "problem", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TestCase> testCases = new ArrayList<>();
 }

@@ -4,6 +4,6 @@ import java.time.ZonedDateTime;
 
 public record ContestProblemRequest(
         Long problemId,
-        String problemIndex, // "A", "B", "C"
+        String problemIndex,
         Integer maxScore
 ) {}

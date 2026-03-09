@@ -26,7 +26,6 @@ public class SubmissionResultListener {
         Submission submission = submissionRepository.findById(result.submissionId())
                 .orElseThrow(() -> new IllegalArgumentException("Посылка не найдена в БД"));
 
-        // Преобразуем строку в наш Enum (внимательно следим, чтобы имена совпадали!)
         try {
             submission.setVerdict(Verdict.valueOf(result.verdict()));
         } catch (IllegalArgumentException e) {
@@ -36,15 +35,12 @@ public class SubmissionResultListener {
 
         submission.setExecutionTimeMs(result.executionTimeMs().intValue());
 
-        // Если была ошибка компиляции или неверный ответ, сохраняем детали, чтобы юзер понял, где ошибся
         if (!"ACCEPTED".equals(result.verdict())) {
             submission.setCompilerLogs(result.details());
         } else {
-            // Можно очистить логи, если до этого там что-то было
             submission.setCompilerLogs(null);
         }
 
-        // Сохраняем обновленный статус!
         submissionRepository.save(submission);
     }
 }

@@ -31,13 +31,10 @@ public class StandingsService {
         Contest contest = contestRepository.findById(contestId)
                 .orElseThrow(() -> new IllegalArgumentException("Контест не найден"));
 
-        // 1. Получаем структуру задач контеста (A, B, C...)
         List<ContestProblem> contestProblems = contestProblemRepository.findByContestIdOrderByProblemIndexAsc(contestId);
 
-        // 2. Получаем все посылки контеста
         List<Submission> submissions = submissionRepository.findByContestIdOrderBySubmittedAtAsc(contestId);
 
-        // 3. Собираем статистику (Map: Username -> (Map: ProblemIndex -> State))
         Map<String, UserStandingsState> stateMap = new HashMap<>();
 
         for (Submission sub : submissions) {
@@ -45,34 +42,29 @@ public class StandingsService {
             stateMap.putIfAbsent(username, new UserStandingsState(username));
             UserStandingsState userState = stateMap.get(username);
 
-            // Находим индекс задачи для этой посылки
             String pIndex = contestProblems.stream()
                     .filter(cp -> cp.getProblem().getId().equals(sub.getProblem().getId()))
                     .findFirst()
                     .map(ContestProblem::getProblemIndex)
                     .orElse("Unknown");
 
-            // Рассчитываем время отправки в минутах от старта контеста
             long minutesFromStart = Math.max(0, Duration.between(contest.getStartTime(), sub.getSubmittedAt()).toMinutes());
 
             userState.processSubmission(pIndex, sub.getVerdict(), (int) minutesFromStart);
         }
 
-        // 4. Формируем список строк и сортируем по правилам ICPC
         List<StandingsRow> rows = stateMap.values().stream()
                 .map(state -> state.toDto(contestProblems))
                 .sorted(Comparator
-                        .comparingInt(StandingsRow::problemsSolved).reversed() // Сначала больше решенных
-                        .thenComparingInt(StandingsRow::totalPenalty)          // Затем меньше штрафа
+                        .comparingInt(StandingsRow::problemsSolved).reversed()
+                        .thenComparingInt(StandingsRow::totalPenalty)
                 )
                 .collect(Collectors.toList());
 
-        // 5. Расставляем места (rank)
         List<StandingsRow> rankedRows = new ArrayList<>();
         int currentRank = 1;
         for (int i = 0; i < rows.size(); i++) {
             StandingsRow row = rows.get(i);
-            // Если результаты совпадают с предыдущим, ранг одинаковый (например, два первых места)
             if (i > 0 &&
                     row.problemsSolved() == rows.get(i-1).problemsSolved() &&
                     row.totalPenalty() == rows.get(i-1).totalPenalty()) {
@@ -87,7 +79,6 @@ public class StandingsService {
         return new StandingsResponse(contest.getId(), contest.getTitle(), rankedRows);
     }
 
-    // --- Вспомогательный класс для накопления состояния конкретного юзера ---
     private static class UserStandingsState {
         String username;
         int totalSolved = 0;
@@ -102,15 +93,13 @@ public class StandingsService {
             problems.putIfAbsent(problemIndex, new ProblemState());
             ProblemState pState = problems.get(problemIndex);
 
-            // Если задача уже решена, игнорируем дальнейшие посылки по ней
             if (pState.isAccepted) return;
 
-            // Ошибки компиляции не учитываем в ICPC
             if (verdict == Verdict.COMPILATION_ERROR) return;
 
             if (verdict == Verdict.ACCEPTED) {
                 pState.isAccepted = true;
-                pState.penalty = timeMinutes + (pState.attempts * 20); // Время + (20 мин * кол-во ошибок)
+                pState.penalty = timeMinutes + (pState.attempts * 20);
 
                 this.totalSolved++;
                 this.totalPenalty += pState.penalty;
@@ -121,7 +110,7 @@ public class StandingsService {
 
         StandingsRow toDto(List<ContestProblem> contestProblems) {
             List<StandingsProblemResult> results = new ArrayList<>();
-            // Гарантируем, что в DTO будут ячейки для ВСЕХ задач контеста, даже если юзер их не отправлял
+
             for (ContestProblem cp : contestProblems) {
                 ProblemState pState = problems.getOrDefault(cp.getProblemIndex(), new ProblemState());
                 results.add(new StandingsProblemResult(cp.getProblemIndex(), pState.isAccepted, pState.attempts, pState.penalty));

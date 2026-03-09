@@ -23,8 +23,8 @@ public class ContestProblem {
     private Problem problem;
 
     @Column(name = "problem_index", nullable = false, length = 10)
-    private String problemIndex; // Индекс в контесте (Например: "A", "B1", "C")
+    private String problemIndex;
 
     @Column(name = "max_score", nullable = false)
-    private Integer maxScore; // Максимальный балл за задачу (Например: 500, 1000)
+    private Integer maxScore;
 }

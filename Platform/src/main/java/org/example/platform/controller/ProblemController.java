@@ -17,13 +17,11 @@ public class ProblemController {
 
     private final ProblemService problemService;
 
-    // Этот эндпоинт доступен ВСЕМ авторизованным пользователям
     @GetMapping
     public ResponseEntity<List<ProblemSummaryResponse>> getAllProblems() {
         return ResponseEntity.ok(problemService.getAllPublicProblems());
     }
 
-    // Этот эндпоинт доступен ТОЛЬКО авторам задач и админам
     @PreAuthorize("hasAuthority('CREATE_PROBLEM')")
     @PostMapping
     public ResponseEntity<String> createProblem(@RequestBody ProblemCreateRequest request) {

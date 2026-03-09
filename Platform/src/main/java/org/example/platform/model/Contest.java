@@ -19,32 +19,28 @@ public class Contest {
     private Long id;
 
     @Column(nullable = false)
-    private String title; // Например: "Codeforces Round 900 (Div. 2)"
+    private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String description; // Описание, правила, спонсоры
+    private String description;
 
     @Column(name = "start_time", nullable = false)
-    private ZonedDateTime startTime; // Запланированное время начала
+    private ZonedDateTime startTime;
 
     @Column(name = "duration_minutes", nullable = false)
-    private Integer durationMinutes; // Длительность в минутах (обычно 120 или 150)
+    private Integer durationMinutes;
 
-    // Кто создал контест
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    // Связь с задачами в этом контесте (через промежуточную таблицу)
     @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ContestProblem> contestProblems = new ArrayList<>();
 
-    // Связь с зарегистрированными участниками
     @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ContestRegistration> registrations = new ArrayList<>();
 
-    // Удобный метод, чтобы на лету определять, идет ли сейчас контест
-    @Transient // Это поле не сохраняется в БД, оно вычисляется в памяти
+    @Transient
     public boolean isRunning() {
         ZonedDateTime now = ZonedDateTime.now();
         ZonedDateTime endTime = startTime.plusMinutes(durationMinutes);

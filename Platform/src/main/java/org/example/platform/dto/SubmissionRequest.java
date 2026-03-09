@@ -3,7 +3,7 @@ import org.example.platform.model.enums.ProgrammingLanguage;
 
 public record SubmissionRequest(
         Long problemId,
-        Long contestId, // Опционально, если решаем внутри контеста
+        Long contestId,
         ProgrammingLanguage language,
         String sourceCode
 ) {}

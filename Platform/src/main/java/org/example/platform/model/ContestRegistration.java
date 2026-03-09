@@ -26,7 +26,4 @@ public class ContestRegistration {
 
     @Column(name = "registered_at", updatable = false)
     private ZonedDateTime registeredAt = ZonedDateTime.now();
-
-    // Здесь в будущем можно добавить флаг "участвует вне конкурса" (outOfCompetition),
-    // если рейтинг пользователя слишком высок для этого дивизиона
 }

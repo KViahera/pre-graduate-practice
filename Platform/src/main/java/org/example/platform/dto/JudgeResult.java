@@ -3,8 +3,8 @@ package org.example.platform.dto; // или org.example.worker.dto для вор
 
 public record JudgeResult(
         Long submissionId,
-        String verdict,       // "ACCEPTED", "WRONG_ANSWER", "COMPILATION_ERROR" и т.д.
-        String details,       // Текст ошибки или "Все тесты пройдены"
-        Long executionTimeMs, // Затраченное время
-        Integer testsPassed   // Сколько тестов пройдено успешно
+        String verdict,
+        String details,
+        Long executionTimeMs,
+        Integer testsPassed
 ) {}

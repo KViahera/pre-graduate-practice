@@ -15,5 +15,5 @@ public class Tag {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String name; // Например: "dynamic programming", "graphs"
+    private String name;
 }

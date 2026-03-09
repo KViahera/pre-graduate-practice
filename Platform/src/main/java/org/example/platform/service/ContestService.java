@@ -21,7 +21,6 @@ public class ContestService {
     private final ContestProblemRepository contestProblemRepository;
     private final ContestRegistrationRepository registrationRepository;
 
-    // Вспомогательный метод для получения текущего пользователя
     private User getCurrentUser() {
         return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
@@ -37,7 +36,6 @@ public class ContestService {
 
         Contest savedContest = contestRepository.save(contest);
 
-        // Привязываем задачи к контесту
         for (ContestProblemRequest cpReq : request.problems()) {
             Problem problem = problemRepository.findById(cpReq.problemId())
                     .orElseThrow(() -> new IllegalArgumentException("Задача не найдена: " + cpReq.problemId()));
@@ -79,25 +77,18 @@ public class ContestService {
         User currentUser = getCurrentUser();
         ZonedDateTime now = ZonedDateTime.now();
 
-        // Проверяем, начался ли контест
         if (now.isBefore(contest.getStartTime())) {
-            // Если не начался, доступ имеет ТОЛЬКО автор контеста
             if (!contest.getAuthor().getId().equals(currentUser.getId())) {
                 throw new IllegalStateException("Контест еще не начался! Доступ к задачам закрыт.");
             }
         } else {
-            // Если контест начался или завершился, проверяем регистрацию участника
-            // (В реальной системе после окончания контеста задачи часто открывают для всех,
-            // но во время контеста - только для зарегистрированных)
             if (contest.isRunning() && !registrationRepository.existsByContestAndUser(contest, currentUser)) {
-                // Исключение: автор может смотреть всегда
                 if (!contest.getAuthor().getId().equals(currentUser.getId())) {
                     throw new IllegalStateException("Вы не зарегистрированы на этот контест.");
                 }
             }
         }
 
-        // Если все проверки пройдены, отдаем отсортированный список задач
         return contestProblemRepository.findByContestIdOrderByProblemIndexAsc(contestId)
                 .stream()
                 .map(cp -> new ProblemForContestResponse(

@@ -22,7 +22,6 @@ public class SubmissionController {
         return ResponseEntity.ok("Посылка успешно отправлена. ID: " + submissionId);
     }
 
-    // Просмотр статуса посылки (можно сделать публичным или ограничить по автору)
     @GetMapping("/{id}")
     public ResponseEntity<SubmissionResponse> getSubmission(@PathVariable Long id) {
         return ResponseEntity.ok(submissionService.getSubmissionStatus(id));

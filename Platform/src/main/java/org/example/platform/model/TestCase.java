@@ -20,11 +20,9 @@ public class TestCase {
     @Column(name = "expected_output", columnDefinition = "TEXT", nullable = false)
     private String expectedOutput;
 
-    // Является ли тест примером (будет ли он отображаться в условии задачи)
     @Column(name = "is_sample", nullable = false)
     private Boolean isSample = false;
 
-    // Вес теста в баллах (если мы захотим делать частичную оценку, как на IOI)
     @Column(name = "score_weight")
     private Integer scoreWeight = 0;
 

@@ -17,9 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Поскольку наша сущность User теперь implements UserDetails,
-        // мы можем просто вернуть её напрямую из базы данных!
-        return userRepository.findByUsername(username)
+       return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 }

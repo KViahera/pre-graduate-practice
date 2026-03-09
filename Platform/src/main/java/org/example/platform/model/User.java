@@ -16,7 +16,7 @@ import java.util.Set;
 @Entity
 @Table(name = "users")
 @Getter @Setter @NoArgsConstructor
-// 1. Добавляем implements UserDetails
+
 public class User implements UserDetails {
 
     @Id
@@ -46,18 +46,14 @@ public class User implements UserDetails {
     )
     private Set<Role> roles = new HashSet<>();
 
-    // --- 2. Ниже реализуем методы интерфейса UserDetails ---
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
 
-        // Добавляем сами роли
         this.roles.forEach(role ->
                 authorities.add(new SimpleGrantedAuthority(role.getName()))
         );
 
-        // Добавляем атомарные права из этих ролей
         this.roles.stream()
                 .flatMap(role -> role.getPermissions().stream())
                 .forEach(permission ->
@@ -69,7 +65,7 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        return this.passwordHash; // Указываем Spring Security, где лежит пароль
+        return this.passwordHash;
     }
 
     @Override
@@ -79,21 +75,20 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
-        return true; // Аккаунт не протухает
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true; // Аккаунт не заблокирован
-    }
+        return true;    }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true; // Пароль не протухает
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return this.isActive; // Берем значение из нашего поля isActive
+        return this.isActive;
     }
 }
