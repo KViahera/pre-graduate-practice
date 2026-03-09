@@ -1,69 +1,106 @@
-CREATE TABLE organizations (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(255) NOT NULL,
-    country VARCHAR(100)
-);
-
+-- Таблица пользователей
 CREATE TABLE users (
-    id              SERIAL PRIMARY KEY,
-    username        VARCHAR(100) UNIQUE NOT NULL,
-    email           VARCHAR(255) UNIQUE NOT NULL,
-    password_hash   VARCHAR(255) NOT NULL,
-    organization_id INT REFERENCES organizations(id) ON DELETE SET NULL,
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE
 );
 
-CREATE TABLE problems (
-    id              SERIAL PRIMARY KEY,
-    title           VARCHAR(255) NOT NULL,
-    description     TEXT NOT NULL,
-    memory_limit_mb INT DEFAULT 256,
-    time_limit_ms   INT DEFAULT 1000,
-    author_id       INT REFERENCES users(id) ON DELETE SET NULL
+-- Таблица ролей (например, PARTICIPANT, PROBLEM_SETTER, ADMIN)
+CREATE TABLE roles (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT
 );
 
+-- Таблица конкретных прав (например, CREATE_PROBLEM, BAN_USER, SUBMIT_CODE)
+CREATE TABLE permissions (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT
+);
+
+-- Связующая таблица: Пользователи <-> Роли
+CREATE TABLE user_roles (
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_id BIGINT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, role_id)
+);
+
+-- Связующая таблица: Роли <-> Права
+CREATE TABLE role_permissions (
+    role_id BIGINT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    permission_id BIGINT NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+    PRIMARY KEY (role_id, permission_id)
+);
+
+-- Таблица тегов
 CREATE TABLE tags (
-    id   SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
-CREATE TABLE contests (
-    id         SERIAL PRIMARY KEY,
-    title      VARCHAR(255) NOT NULL,
-    start_time TIMESTAMP NOT NULL,
-    end_time   TIMESTAMP NOT NULL
+-- Таблица задач
+CREATE TABLE problems (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    statement TEXT NOT NULL,
+    input_format TEXT NOT NULL,
+    output_format TEXT NOT NULL,
+    time_limit_millis INTEGER NOT NULL,
+    memory_limit_mb INTEGER NOT NULL,
+    difficulty INTEGER,
+    is_public BOOLEAN DEFAULT FALSE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    author_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE programming_languages (
-    id      SERIAL PRIMARY KEY,
-    name    VARCHAR(50) NOT NULL,
-    version VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE submissions (
-    id             SERIAL PRIMARY KEY,
-    user_id        INT REFERENCES users(id) ON DELETE CASCADE,
-    problem_id     INT REFERENCES problems(id) ON DELETE CASCADE,
-    language_id    INT REFERENCES programming_languages(id) ON DELETE RESTRICT,
-    code_text      TEXT NOT NULL,
-    status_verdict VARCHAR(50) DEFAULT 'IN_QUEUE',
-    submitted_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
+-- Связующая таблица (Задачи <-> Теги)
 CREATE TABLE problem_tags (
-    problem_id INT REFERENCES problems(id) ON DELETE CASCADE,
-    tag_id     INT REFERENCES tags(id) ON DELETE CASCADE,
+    problem_id BIGINT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+    tag_id BIGINT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
     PRIMARY KEY (problem_id, tag_id)
 );
 
-CREATE TABLE contest_problems (
-    contest_id INT REFERENCES contests(id) ON DELETE CASCADE,
-    problem_id INT REFERENCES problems(id) ON DELETE CASCADE,
-    PRIMARY KEY (contest_id, problem_id)
+-- Таблица тестов (Test Cases)
+CREATE TABLE test_cases (
+    id BIGSERIAL PRIMARY KEY,
+    input_data TEXT NOT NULL,
+    expected_output TEXT NOT NULL,
+    is_sample BOOLEAN DEFAULT FALSE NOT NULL,
+    score_weight INTEGER DEFAULT 0,
+    problem_id BIGINT NOT NULL REFERENCES problems(id) ON DELETE CASCADE
 );
 
-CREATE TABLE contest_participants (
-    contest_id INT REFERENCES contests(id) ON DELETE CASCADE,
-    user_id    INT REFERENCES users(id) ON DELETE CASCADE,
-    PRIMARY KEY (contest_id, user_id)
+-- Таблица контестов (соревнований)
+CREATE TABLE contests (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    duration_minutes INTEGER NOT NULL,
+    author_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Промежуточная таблица: Контест <-> Задача
+-- Хранит контекст задачи внутри конкретного соревнования
+CREATE TABLE contest_problems (
+    id BIGSERIAL PRIMARY KEY,
+    contest_id BIGINT NOT NULL REFERENCES contests(id) ON DELETE CASCADE,
+    problem_id BIGINT NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+    problem_index VARCHAR(10) NOT NULL, -- Буква задачи (A, B, C1)
+    max_score INTEGER NOT NULL,         -- Стоимость задачи в баллах
+    UNIQUE (contest_id, problem_index), -- В одном контесте не может быть двух задач "A"
+    UNIQUE (contest_id, problem_id)     -- Одну задачу нельзя добавить в контест дважды
+);
+
+-- Промежуточная таблица: Контест <-> Пользователь (Регистрация)
+CREATE TABLE contest_registrations (
+    id BIGSERIAL PRIMARY KEY,
+    contest_id BIGINT NOT NULL REFERENCES contests(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    registered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (contest_id, user_id)        -- Защита от двойной регистрации
 );
