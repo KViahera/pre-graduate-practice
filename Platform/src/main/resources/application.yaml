@@ -4,8 +4,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5432/competitive_programming_platform
-    username: postgres
-    password: postgres
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -18,5 +18,5 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 jwt:
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  secret: ${JWT_SECRET}
   expiration: 86400000
