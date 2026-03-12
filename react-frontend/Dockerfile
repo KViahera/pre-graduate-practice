@@ -4,7 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm ci 
 COPY src ./src
 COPY public ./public
-COPY index.html vite.config.js tailwind.config.js postcss.config.js tsconfig.json ./
+COPY index.html vite.config.js eslint.config.js ./
 RUN npm run build
 
 
