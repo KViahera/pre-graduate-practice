@@ -3,10 +3,12 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 COPY src ./src
-
 RUN mvn clean package -DskipTests
+
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+COPY --from=builder --chown=appuser:appgroup /app/target/*.jar app.jar
+USER appuser
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
