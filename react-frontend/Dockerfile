@@ -9,6 +9,6 @@ RUN mkdir -p /app && chown -R node:node /app
 WORKDIR /app
 RUN npm install -g serve
 USER node
-COPY --from=builder --chown=node:node --chmod=444 /app/dist ./dist
+COPY --from=builder --chown=node:node --chmod=0555 /app/dist ./dist
 EXPOSE 5173
 CMD ["serve", "-s", "dist", "-l", "5173"]
