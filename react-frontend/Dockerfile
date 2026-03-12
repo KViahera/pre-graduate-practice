@@ -1,10 +1,10 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm ci 
-COPY src/ ./src/
-COPY public/ ./public/
-COPY index.html vite.config.* tailwind.config.* postcss.config.* tsconfig*.json ./
+COPY src ./src
+COPY public ./public
+COPY index.html vite.config.js tailwind.config.js postcss.config.js tsconfig.json ./
 RUN npm run build
 
 
