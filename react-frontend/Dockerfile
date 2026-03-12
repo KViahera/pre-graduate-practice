@@ -2,8 +2,11 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci 
-COPY . .
+COPY src/ ./src/
+COPY public/ ./public/
+COPY index.html vite.config.* tailwind.config.* postcss.config.* tsconfig*.json ./
 RUN npm run build
+
 
 FROM node:22-alpine
 RUN mkdir -p /app && chown -R node:node /app
