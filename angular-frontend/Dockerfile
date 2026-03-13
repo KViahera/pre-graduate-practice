@@ -1,15 +1,16 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm ci
-COPY . .
+COPY src ./src
+COPY angular.json tsconfig.json tsconfig.app.json ./
 RUN npm run build -- --configuration production
 
 
-FROM nginx:alpine
-COPY --from=builder /app/dist/angular-frontend/browser /usr/share/nginx/html
+FROM nginxinc/nginx-unprivileged:alpine-slim
+USER root
 RUN echo 'server { \
-    listen 80; \
+    listen 8080; \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
@@ -17,5 +18,8 @@ RUN echo 'server { \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+COPY --from=builder /app/dist/angular-frontend/browser /usr/share/nginx/html/
+RUN chmod -R a-w /usr/share/nginx/html && chown -R 101:101 /usr/share/nginx/html
+USER 101
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
