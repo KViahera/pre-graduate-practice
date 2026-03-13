@@ -85,6 +85,7 @@ public class ProblemService {
 
     @Transactional
     public void deleteProblem(Integer id) {
+        System.out.println("delete Problem");
         if (!problemRepository.existsById(id)) {
             throw new RuntimeException("Problem not found");
         }

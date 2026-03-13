@@ -1,0 +1,136 @@
+<div class="p-8 max-w-6xl mx-auto text-left">
+  <div class="flex items-center gap-4 mb-6">
+    <a routerLink="/" class="text-gray-500 hover:text-black transition-colors">← К списку соревнований</a>
+    <h1 class="text-2xl font-bold">{{ contestName }}</h1>
+  </div>
+
+  <div class="flex justify-between items-center mb-4 w-full">
+    <input type="text" placeholder="Поиск по названию..." [ngModel]="search" (ngModelChange)="onSearchChange($event)" class="border border-gray-300 p-2 rounded w-96 focus:outline-none focus:border-blue-500"/>
+    <button (click)="handleOpenAddModal()" class="text-green-600 hover:text-green-800 font-bold hover:underline transition-colors">Добавить задачу</button>
+  </div>
+
+  <div class="bg-white rounded shadow border border-gray-200 relative overflow-hidden min-h-[200px]">
+    @if (loading) { <div class="absolute inset-0 bg-white/70 flex items-center justify-center z-10"><span class="text-gray-800 font-bold">Загрузка...</span></div> }
+    <table class="w-full border-collapse table-fixed">
+      <thead class="bg-gray-50 border-b">
+        <tr>
+          <th class="p-4 w-12 text-center text-black font-bold border-r border-gray-200"></th>
+          <th class="p-4 w-24 text-center text-black font-bold border-r border-gray-200">№</th>
+          <th class="p-4 text-center text-black font-bold border-r border-gray-200">Название</th>
+          <th class="p-4 text-center text-black font-bold w-72">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of data; track row.id; let i = $index) {
+          <tr [draggable]="!search" (dragstart)="handleDragStart($event, i)" (dragover)="handleDragOver($event)" (drop)="handleDrop($event, i)"
+              class="border-b last:border-0 hover:bg-gray-50 transition-colors" [class.cursor-grab]="!search" [class.opacity-30]="draggedIndex === i">
+            <td class="p-4 text-center text-gray-400 select-none border-r border-gray-200">{{ !search ? '⋮⋮' : '' }}</td>
+            <td class="p-4 text-center text-black font-bold font-mono border-r border-gray-200">{{ row.number }}</td>
+            <td class="p-4 text-left border-r border-gray-200 overflow-hidden">
+              <span class="font-medium text-gray-800 block truncate">{{ row.name }}</span>
+              @if (row.usageCount > 1) { <span class="text-xs text-orange-600 font-medium">Используется в {{ row.usageCount }} контестах</span> }
+            </td>
+            <td class="p-4 text-center w-72">
+              <div class="flex justify-center gap-5 items-center">
+                <button (click)="handleOpenEditModal(row)" class="text-gray-500 hover:text-blue-600 text-sm font-medium hover:underline">Редактировать</button>
+                <button (click)="handleUnlink(row.id, row.name)" class="text-orange-500 hover:text-orange-700 text-sm font-medium hover:underline">Отвязать</button>
+                <button (click)="handleDeleteCompletely(row.id, row.name)" class="text-red-500 hover:text-red-700 text-sm font-medium hover:underline">Удалить</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          @if (!loading) { <tr><td colspan="4" class="p-8 text-center text-gray-500 italic">Задач пока нет</td></tr> }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (isAddModalOpen) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-300">
+        <div class="p-6 border-b border-gray-200 bg-white rounded-t-lg">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-800">{{ isEditMode ? 'Редактирование задачи' : 'Добавление задачи' }}</h2>
+            <button (click)="isAddModalOpen = false" class="text-gray-400 hover:text-black font-bold text-xl transition-colors">✕</button>
+          </div>
+          @if (!isEditMode) {
+            <div class="flex gap-6 border-b border-gray-200">
+              <button (click)="setTab('new')" class="pb-2 font-medium transition-colors" [class.border-b-2]="addTab === 'new'" [class.border-blue-600]="addTab === 'new'" [class.text-blue-600]="addTab === 'new'" [class.text-gray-500]="addTab !== 'new'">Создать новую</button>
+              <button (click)="setTab('existing')" class="pb-2 font-medium transition-colors" [class.border-b-2]="addTab === 'existing'" [class.border-blue-600]="addTab === 'existing'" [class.text-blue-600]="addTab === 'existing'" [class.text-gray-500]="addTab !== 'existing'">Выбрать из Архива</button>
+            </div>
+          }
+        </div>
+
+        <div class="p-6 overflow-y-auto flex-grow bg-white">
+          @if (isEditMode) {
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-md">
+              <h3 class="text-sm font-bold text-yellow-800 text-left">Внимание!</h3>
+              <div class="mt-1 text-sm text-yellow-700 text-left leading-relaxed">При сохранении изменений, они также применятся ко всем остальным связанным соревнованиям.</div>
+            </div>
+          }
+
+          @if (isEditMode || addTab === 'new') {
+            <form id="problemForm" (ngSubmit)="handleSaveForm()" class="space-y-6 text-left">
+              <div>
+                <label class="block text-sm font-bold text-black mb-1">Название задачи</label>
+                <input required name="pName" [(ngModel)]="formData.name" class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-blue-500" />
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-bold text-black mb-1">Время (мс)</label>
+                  <input required name="timeLimit" [(ngModel)]="formData.timeLimit" class="w-full border border-gray-300 p-2 rounded outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-black mb-1">Память (МБ)</label>
+                  <input required name="memLimit" [(ngModel)]="formData.memoryLimit" class="w-full border border-gray-300 p-2 rounded outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div><label class="block text-sm font-bold text-black mb-1">Условие</label><textarea required rows="5" name="legend" [(ngModel)]="formData.legend" class="w-full border border-gray-300 p-2 rounded text-sm resize-y focus:outline-none focus:border-blue-500"></textarea></div>
+              <div><label class="block text-sm font-bold text-black mb-1">Входные данные</label><textarea required rows="3" name="inFormat" [(ngModel)]="formData.inputFormat" class="w-full border border-gray-300 p-2 rounded text-sm focus:outline-none focus:border-blue-500"></textarea></div>
+              <div><label class="block text-sm font-bold text-black mb-1">Выходные данные</label><textarea required rows="3" name="outFormat" [(ngModel)]="formData.outputFormat" class="w-full border border-gray-300 p-2 rounded text-sm focus:outline-none focus:border-blue-500"></textarea></div>
+              
+              <div class="space-y-4">
+                <div class="border-b border-gray-200 pb-2"><h3 class="text-sm font-bold text-black">Примеры</h3></div>
+                <div class="space-y-3">
+                  @for (sample of formData.samples; track $index; let i = $index) {
+                    <div class="flex items-center gap-3">
+                      <div class="flex-grow bg-gray-50 border border-gray-200 rounded p-4">
+                        <div class="grid grid-cols-2 gap-4">
+                          <textarea required placeholder="Ввод..." rows="3" name="sampleIn_{{i}}" [(ngModel)]="sample.input" class="w-full border border-gray-300 focus:border-blue-500 p-2 rounded font-mono text-sm outline-none"></textarea>
+                          <textarea required placeholder="Вывод..." rows="3" name="sampleOut_{{i}}" [(ngModel)]="sample.output" class="w-full border border-gray-300 focus:border-blue-500 p-2 rounded font-mono text-sm outline-none"></textarea>
+                        </div>
+                      </div>
+                      <button type="button" (click)="removeSample(i)" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 text-2xl font-medium pb-0.5"> − </button>
+                    </div>
+                  }
+                </div>
+                <div class="flex justify-center mt-2"><button type="button" (click)="addSample()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-green-50 hover:text-green-600 text-2xl font-medium pb-0.5"> + </button></div>
+              </div>
+            </form>
+          }
+
+          @if (!isEditMode && addTab === 'existing') {
+            <div class="space-y-4 text-left">
+              <input type="text" placeholder="Поиск в архиве..." [ngModel]="globalSearch" (ngModelChange)="onGlobalSearchChange($event)" class="w-full border border-gray-300 p-2 rounded outline-none focus:border-blue-500" />
+              <div class="bg-white rounded border border-gray-200 max-h-96 overflow-y-auto">
+                @for (p of globalProblems; track p.id) {
+                  <div class="flex justify-between items-center p-4 border-b last:border-0 hover:bg-gray-50 transition-colors">
+                    <div><span class="font-bold text-gray-800 block">{{ p.name }}</span><p class="text-xs text-gray-500">{{ p.timeLimit }} • {{ p.memoryLimit }}</p></div>
+                    <button (click)="handleLinkExisting(p.id)" class="bg-blue-600 text-white px-5 py-2 rounded text-sm font-bold hover:bg-blue-700 shadow-sm">Добавить</button>
+                  </div>
+                } @empty { <div class="p-12 text-center text-gray-500 italic">Задачи не найдены</div> }
+              </div>
+            </div>
+          }
+        </div>
+
+        @if (isEditMode || addTab === 'new') {
+          <div class="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+            <button type="button" (click)="isAddModalOpen = false" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded">Отмена</button>
+            <button type="submit" form="problemForm" class="px-4 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 shadow-sm">Сохранить</button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

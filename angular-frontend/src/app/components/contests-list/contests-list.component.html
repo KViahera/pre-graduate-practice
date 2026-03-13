@@ -1,0 +1,81 @@
+<div class="p-8 max-w-6xl mx-auto text-left">
+  <h1 class="text-2xl font-bold mb-6">Управление соревнованиями</h1>
+  
+  <div class="flex justify-between items-center mb-4">
+    <input type="text" placeholder="Поиск по названию..." [ngModel]="search" (ngModelChange)="onSearchChange($event)" class="border border-gray-300 p-2 rounded w-96 focus:outline-none focus:border-blue-500" />
+    <button (click)="handleOpenCreate()" class="text-green-600 hover:text-green-800 font-bold hover:underline transition-colors">Добавить соревнование</button>
+  </div>
+
+  <div class="bg-white rounded shadow border border-gray-200 relative min-h-[250px] overflow-hidden">
+    @if (loading) { <div class="absolute inset-0 bg-white/70 flex items-center justify-center z-10"><span class="text-gray-800 font-bold">Загрузка...</span></div> }
+    <table class="w-full border-collapse">
+      <thead class="bg-gray-50 border-b">
+        <tr>
+          <th class="p-4 w-12 text-center text-black font-bold border-r border-gray-200">№</th>
+          <th class="p-4 text-center font-bold border-r border-gray-200 text-black">Название</th>
+          <th class="p-4 w-40 text-center font-bold border-r border-gray-200 text-black">Начало</th>
+          <th class="p-4 w-32 text-center font-bold border-r border-gray-200 text-black">Длительность</th>
+          <th class="p-4 text-center w-72 font-bold text-black">Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of data; track c.id; let i = $index) {
+          <tr class="border-b last:border-0 hover:bg-gray-50 transition-colors">
+            <td class="p-4 text-center text-black font-bold font-mono border-r border-gray-200">{{ page * size + i + 1 }}</td>
+            <td class="p-4 font-medium text-gray-800 text-left border-r border-gray-200">{{ c.name }}</td>
+            <td class="p-4 text-center text-blue-600 border-r border-gray-200">
+              <div class="font-semibold text-sm">{{ c.startTime | date:'dd.MM.yyyy' }}</div>
+              <div class="text-xs font-mono mt-0.5">{{ c.startTime | date:'HH:mm' }}</div>
+            </td>
+            <td class="p-4 text-center text-black font-mono font-medium border-r border-gray-200">{{ c.durationFormatted }}</td>
+            <td class="p-4">
+              <div class="flex justify-center gap-5 items-center">
+                <button (click)="handleOpenEdit(c)" class="text-gray-500 hover:text-blue-600 text-sm font-medium hover:underline">Редактировать</button>
+                <button (click)="handleDelete(c.id, c.name)" class="text-red-500 hover:text-red-700 text-sm font-medium hover:underline">Удалить</button>
+                <a [routerLink]="['/contests', c.id, 'problems']" class="flex flex-col items-center justify-center text-blue-600 hover:text-blue-800 text-sm font-bold bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded transition-colors">
+                  <span>Задачи</span><span class="text-lg font-normal leading-none mt-[-2px]">→</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          @if (!loading) { <tr><td colspan="5" class="p-8 text-center text-gray-500 italic">Соревнования не найдены</td></tr> }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex justify-between items-center mt-4 text-sm text-gray-600">
+    <div class="font-medium">Страница {{ totalPages === 0 ? 0 : page + 1 }} из {{ totalPages }}</div>
+    <div class="flex gap-2">
+      <button [disabled]="page === 0" (click)="changePage(-1)" class="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50 transition-colors font-medium">Назад</button>
+      <button [disabled]="page >= totalPages - 1" (click)="changePage(1)" class="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50 transition-colors font-medium">Вперед</button>
+    </div>
+  </div>
+
+  @if (isModalOpen) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white p-6 rounded-lg shadow-xl w-[400px]">
+        <h2 class="text-xl font-bold mb-4">{{ modalMode === 'create' ? 'Создать соревнование' : 'Редактировать соревнование' }}</h2>
+        <form (ngSubmit)="handleSave()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Название</label>
+            <input required type="text" name="name" [(ngModel)]="formData.name" class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Дата и время начала</label>
+            <input required type="datetime-local" name="startTime" [(ngModel)]="formData.startTime" class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-1">Длительность (в минутах)</label>
+            <input required type="number" min="1" name="duration" [(ngModel)]="formData.duration" class="w-full border border-gray-300 p-2 rounded focus:outline-none focus:border-blue-500" />
+          </div>
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <button type="button" (click)="isModalOpen = false" class="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded">Отмена</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>
