@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY src ./src
-COPY angular.json tsconfig.json tsconfig.app.json ./
+COPY angular.json tsconfig.json tsconfig.app.json .postcssrc.json ./
 RUN npm run build -- --configuration production
 
 
