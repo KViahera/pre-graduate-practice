@@ -19,4 +19,4 @@
 | Шаг 3: Backend на SpringBoot + Hibernate | 40 | 32 |
 | Шаг 4.1: Frontend (React) | 8 | 8 |
 | Шаг 4.2: Frontend (Angular) | 8 | |
-| Шаг 5: Запуск в Docker | 2 | 1 |
+| Шаг 5: Запуск в Docker | 4 | 2 |
